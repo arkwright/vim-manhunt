@@ -1,20 +1,45 @@
 """
 " User config via:
 "
-" let g:manhunt_default_mode = 'working|pair'
 " let g:manhunt_command_name = 'Manhunt'
+" let g:manhunt_default_mode = 'working|pair'
 " let g:manhunt_diff_align   = 'none|top|center|bottom'
+" let g:manhunt_key_next_diff = 'n'
+" let g:manhunt_key_previous_diff = 'N'
+" let g:manhunt_key_select_next_version = 'j'
+" let g:manhunt_key_select_previous_version = 'k'
+" let g:manhunt_key_select_version = '<CR>'
 """
-if exists('g:manhunt_default_mode') ==# 0   ||   g:manhunt_default_mode ==# ''
-  let g:manhunt_default_mode = 'working'
-endif
-
 if exists('g:manhunt_command_name') ==# 0   ||   g:manhunt_command_name ==# ''
   let g:manhunt_command_name = 'Manhunt'
 endif
 
+if exists('g:manhunt_default_mode') ==# 0   ||   g:manhunt_default_mode ==# ''
+  let g:manhunt_default_mode = 'working'
+endif
+
 if exists('g:manhunt_diff_align') ==# 0   ||   g:manhunt_diff_align ==# ''
   let g:manhunt_diff_align = 'center'
+endif
+
+if exists('g:manhunt_key_next_diff') ==# 0   ||   g:manhunt_key_next_diff ==# ''
+  let g:manhunt_key_next_diff = 'n'
+endif
+
+if exists('g:manhunt_key_previous_diff') ==# 0   ||   g:manhunt_key_previous_diff ==# ''
+  let g:manhunt_key_previous_diff = 'N'
+endif
+
+if exists('g:manhunt_key_select_next_version') ==# 0   ||   g:manhunt_key_select_next_version ==# ''
+  let g:manhunt_key_select_next_version = 'j'
+endif
+
+if exists('g:manhunt_key_select_previous_version') ==# 0   ||   g:manhunt_key_select_previous_version ==# ''
+  let g:manhunt_key_select_previous_version = 'k'
+endif
+
+if exists('g:manhunt_key_select_version') ==# 0   ||   g:manhunt_key_select_version ==# ''
+  let g:manhunt_key_select_version = '<CR>'
 endif
 
 let s:startBufferNumber = 1
@@ -23,7 +48,7 @@ let s:mode              = ''
 " Dynamically create the Manhunt invocation command, unless an identically
 " named command already exists.
 if exists(':' . g:manhunt_command_name) ==# 0
-  execute "command! -complete=custom,s:ManhuntArgumentAutocomplete -nargs=? " . g:manhunt_command_name . " call s:Manhunt(<f-args>)"
+  execute 'command! -complete=custom,s:ManhuntArgumentAutocomplete -nargs=? ' . g:manhunt_command_name . ' call s:Manhunt(<f-args>)'
 endif
 
 """
@@ -209,7 +234,7 @@ function! s:Off()
   call s:GotoLeftDiffSplit()
 
   only
-  execute "buffer " . s:startBufferNumber
+  execute 'buffer ' . s:startBufferNumber
 endfunction
 
 """
@@ -225,11 +250,11 @@ function! s:On()
   cwindow
   execute "silent! normal! \<c-w>J"
 
-  nnoremap <buffer> <CR> :call <SID>SelectVersion()<CR>
-  nnoremap <buffer> j j:call <SID>SelectVersion()<CR>
-  nnoremap <buffer> k k:call <SID>SelectVersion()<CR>
-  nnoremap <buffer> n :call <SID>NextDiff()<CR>
-  nnoremap <buffer> N :call <SID>PreviousDiff()<CR>
+  execute 'nnoremap <buffer> ' . g:manhunt_key_next_diff . ' :call <SID>NextDiff()<CR>'
+  execute 'nnoremap <buffer> ' . g:manhunt_key_previous_diff . ' :call <SID>PreviousDiff()<CR>'
+  execute 'nnoremap <buffer> ' . g:manhunt_key_select_next_version . ' j:call <SID>SelectVersion()<CR>'
+  execute 'nnoremap <buffer> ' . g:manhunt_key_select_previous_version . ' k:call <SID>SelectVersion()<CR>'
+  execute 'nnoremap <buffer> ' . g:manhunt_key_select_version . ' :call <SID>SelectVersion()<CR>'
 
   call s:SelectVersion()
 endfunction
