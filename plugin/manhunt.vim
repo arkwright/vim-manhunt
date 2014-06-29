@@ -48,8 +48,30 @@ let s:mode              = ''
 " Dynamically create the Manhunt invocation command, unless an identically
 " named command already exists.
 if exists(':' . g:manhunt_command_name) ==# 0
-  execute 'command! -complete=custom,s:ManhuntArgumentAutocomplete -nargs=? ' . g:manhunt_command_name . ' call s:Manhunt(<f-args>)'
+  execute 'command! -complete=custom,s:ArgumentAutocomplete -nargs=? ' . g:manhunt_command_name . ' call s:Manhunt(<f-args>)'
 endif
+
+"""
+" Returns a newline-separated string of argument autocompletion suggestions.
+"
+" Vim executes this function when the user presses <tab> while entering
+" an argument for the Manhunt invocation command.
+"
+" @param    string    ArgLead    The leading portion of the argument currently
+"                                being completed on.
+" @param    string    CmdLine    The entire command line.
+" @param    integer   CursorPos  The cursor position within the command line
+"                                (byte index)
+"
+" @return   string               A newline-separated string of autocompletion suggestions.
+"""
+function! s:ArgumentAutocomplete(ArgLead, CmdLine, CursorPos)
+  let l:modes = ['working', 'pair']
+
+  let l:joinedModes = join(l:modes, "\n")
+
+  return l:joinedModes
+endfunction
 
 """
 " Aligns the diff split window according to the users's preference.
