@@ -155,6 +155,17 @@ function! s:Manhunt(...)
 endfunction
 
 """
+" Goes to the next diff in the split windows.
+"""
+function! s:NextDiff()
+  call s:GotoLeftDiffSplit()
+
+  silent! normal! ]czz
+
+  call s:GotoQuickfixSplit()
+endfunction
+
+"""
 " Turns Manhunt off.
 """
 function! s:Off()
@@ -185,8 +196,21 @@ function! s:On()
   nnoremap <buffer> <CR> :call <SID>SelectVersion()<CR>
   nnoremap <buffer> j j:call <SID>SelectVersion()<CR>
   nnoremap <buffer> k k:call <SID>SelectVersion()<CR>
+  nnoremap <buffer> n :call <SID>NextDiff()<CR>
+  nnoremap <buffer> N :call <SID>PreviousDiff()<CR>
 
   call s:SelectVersion()
+endfunction
+
+"""
+" Goes to the previous diff in the split windows.
+"""
+function! s:PreviousDiff()
+  call s:GotoLeftDiffSplit()
+
+  silent! normal! [czz
+
+  call s:GotoQuickfixSplit()
 endfunction
 
 """
