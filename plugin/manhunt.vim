@@ -3,22 +3,47 @@
 "
 " let g:manhunt_default_mode = 'working|pair'
 " let g:manhunt_command_name = 'Manhunt'
+" let g:manhunt_diff_align   = 'none|top|center|bottom'
 """
+if exists('g:manhunt_default_mode') ==# 0   ||   g:manhunt_default_mode ==# ''
+  let g:manhunt_default_mode = 'working'
+endif
 
-let s:startBufferNumber = 1
-let s:mode = ''
-
-" Allow the user to specify the command name which will invoke Manhunt.
-" Fallback to a default value if nothing is specified.
 if exists('g:manhunt_command_name') ==# 0   ||   g:manhunt_command_name ==# ''
   let g:manhunt_command_name = 'Manhunt'
 endif
 
+if exists('g:manhunt_diff_align') ==# 0   ||   g:manhunt_diff_align ==# ''
+  let g:manhunt_diff_align = 'center'
+endif
+
+let s:startBufferNumber = 1
+let s:mode              = ''
+
 " Dynamically create the Manhunt invocation command, unless an identically
 " named command already exists.
-if exists(":" . g:manhunt_command_name) ==# 0
+if exists(':' . g:manhunt_command_name) ==# 0
   execute "command! -complete=custom,s:ManhuntArgumentAutocomplete -nargs=? " . g:manhunt_command_name . " call s:Manhunt(<f-args>)"
 endif
+
+"""
+" Aligns the diff split window according to the users's preference.
+"""
+function! s:DiffAlign()
+  if g:manhunt_diff_align ==# 'none'
+    return
+  elseif g:manhunt_diff_align ==# 'top'
+    let l:align = 'zt'
+  elseif g:manhunt_diff_align ==# 'center'
+    let l:align = 'zz'
+  elseif g:manhunt_diff_align ==# 'bottom'
+    let l:align = 'zb'
+  else
+    return
+  endif
+
+  execute 'silent! normal! ' . l:align
+endfunction
 
 """
 " Toggles diff mode on or off for the Manhunt split windows.
@@ -37,11 +62,18 @@ function! s:DiffToggle(state)
     call s:GotoLeftDiffSplit()
     diffthis
     
-    " Jump to the first difference and center on that line.
-    silent! normal! gg
-    call s:NextDiff()
+    " Jump to the first difference.
+    call s:FirstDiff()
   endif
+endfunction
 
+"""
+" Goes to the first diff in the split windows.
+"""
+function! s:FirstDiff()
+  call s:GotoLeftDiffSplit()
+  silent! normal! gg
+  call s:NextDiff()
   call s:GotoQuickfixSplit()
 endfunction
 
@@ -160,9 +192,8 @@ endfunction
 """
 function! s:NextDiff()
   call s:GotoLeftDiffSplit()
-
-  silent! normal! ]czz
-
+  silent! normal! ]c
+  call s:DiffAlign()
   call s:GotoQuickfixSplit()
 endfunction
 
@@ -208,9 +239,8 @@ endfunction
 """
 function! s:PreviousDiff()
   call s:GotoLeftDiffSplit()
-
-  silent! normal! [czz
-
+  silent! normal! [c
+  call s:DiffAlign()
   call s:GotoQuickfixSplit()
 endfunction
 
