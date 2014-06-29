@@ -38,7 +38,8 @@ function! s:DiffToggle(state)
     diffthis
     
     " Jump to the first difference and center on that line.
-    silent! normal! gg]czz
+    silent! normal! gg
+    call s:NextDiff()
   endif
 
   call s:GotoQuickfixSplit()
