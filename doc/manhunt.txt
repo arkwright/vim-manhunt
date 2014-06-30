@@ -259,9 +259,6 @@ over on Github:
 
 http://github.com/arkwright/vim-manhunt
 
-Report any problems you encounter on Github:
-<http://github.com/arkwright/vim-manhunt>
-
 ==============================================================================
 9. CHANGELOG                                               *manhunt-changelog*
 
