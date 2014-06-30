@@ -277,7 +277,7 @@ Manhunt is but a tiny feature added to Tim Pope's amazing fugitive.vim:
 
 https://github.com/tpope/vim-fugitive
 
-This plugin would not have been possible without Steve Losh's incredible book,
+This plugin would not have been possible without Steve Losh's incredible book:
 "Learn Vimscript the Hard Way".
 
 http://learnvimscriptthehardway.stevelosh.com/
