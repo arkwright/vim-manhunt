@@ -153,7 +153,6 @@ N                   Jump backwards to the previous difference between the two
 
 Set any of these global variables in your |vimrc| to customize Manhunt.
 
-
 ------------------------------------------------------------------------------
 *g:manhunt_command_name*
 
