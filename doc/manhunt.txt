@@ -1,6 +1,6 @@
 *manhunt.txt*           For Vim version 7.4          Last change: 2014 June 29
 
-Author:  Robert Arkwright <http://github.com/arkwright>
+Author:  Robert Arkwright <https://github.com/arkwright>
 License: Unlicense (see |manhunt-license|)
 
                                    MANHUNT
@@ -272,6 +272,10 @@ http://semver.org/
 
 ==============================================================================
 10. CREDITS                                                  *manhunt-credits*
+
+Manhunt is lovingly crafted by Robert Arkwright:
+
+https://github.com/arkwright
 
 Manhunt is but a tiny feature added to Tim Pope's amazing fugitive.vim:
 
