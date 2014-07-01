@@ -38,6 +38,12 @@ Use `j` and `k` to browse the quickfix window. The diff view will update
 automatically. Use `n` and `N` from within the quickfix window to easily step
 through the file differences in the splits above.
 
+The quickfix window contents are based on the output of `:Glog`, but modified
+to display additional information, such as the commit date, time, and author.
+To fit all of this information on the screen, the quickfix window is scrolled.
+To view hidden quickfix information, including the filename and commit hash,
+press `0`, `<Home>`, `^`, or similar.
+
 Use the `:Manhunt` command to turn Manhunt off when you are finished.
 
 ### Modes
@@ -109,7 +115,13 @@ Pull requests, feature requests, ideas, bug reports, etc., are all welcome.
 
 Uses [Semantic Versioning](http://semver.org/).
 
-**0.1.0**
+**0.2.0** (2014-07-01)
+
+* Add commit date, time, and author to quickfix window.
+* Scroll and pretty-format the contents of the quickfix window so that it is
+  easier to read.
+
+**0.1.0** (2014-06-29)
 
 * Create `:Manhunt` command with two basic modes: `working` and `pair`.
 

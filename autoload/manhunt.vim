@@ -38,8 +38,9 @@ if exists('g:manhunt_key_select_version') ==# 0   ||   g:manhunt_key_select_vers
   let g:manhunt_key_select_version = '<CR>'
 endif
 
-let s:startBufferNumber = 1
-let s:mode              = ''
+let s:mode                   = ''
+let s:startBufferNumber      = 1
+let s:summaryFormatSeparator = ';-----;'
 
 """
 " Returns a newline-separated string of argument autocompletion suggestions.
@@ -115,6 +116,24 @@ function! s:FirstDiff()
 endfunction
 
 """
+" Call fugitive's :Glog command, but modify the results
+" returned to the quickfix window.
+"""
+function! s:Glog()
+  let l:originalSummaryFormat = g:fugitive_summary_format
+
+  " This format string is appended by fugitive when it calls `git log --pretty=format:<string>`
+  " %ci is the committer date in ISO-8601 format
+  " %cn is the committer name
+  " %s is the commit subject line
+  let g:fugitive_summary_format = '%ci' . s:summaryFormatSeparator . '%cn' . s:summaryFormatSeparator . '%s'
+
+  echo 'Manhunt is calling :Glog. This might take a while...'
+  silent! Glog
+  let g:fugitive_summary_format = l:originalSummaryFormat
+endfunction
+
+"""
 " Moves the cursor to the left diff split.
 """
 function! s:GotoLeftDiffSplit()
@@ -133,6 +152,14 @@ endfunction
 """
 function! s:GotoRightDiffSplit()
   execute '2wincmd w'
+endfunction
+
+"""
+" Scrolls the quickfix window horizontally so that undesirable parts
+" of the filename are off screen.
+"""
+function! s:HideQuickfixFilename()
+  execute "silent! normal! /||../e\<CR>zs"
 endfunction
 
 """
@@ -257,10 +284,12 @@ function! s:On()
   " winbufnr(0) is the number of the buffer associated with the current window.
   let s:startBufferNumber = winbufnr(0)
 
-  silent! Glog
+  call s:Glog()
+  call s:ReformatQuickfix()
   vsplit
   cwindow
   execute "silent! normal! \<c-w>J"
+  call s:HideQuickfixFilename()
 
   execute 'nnoremap <buffer> ' . g:manhunt_key_next_diff . ' :call <SID>NextDiff()<CR>'
   execute 'nnoremap <buffer> ' . g:manhunt_key_previous_diff . ' :call <SID>PreviousDiff()<CR>'
@@ -272,6 +301,26 @@ function! s:On()
 endfunction
 
 """
+" Returns the supplied string padded with spaces to the specified length,
+" adding whitespace to the left or right side as preferred.
+"
+" @param    string    str     The string to be padded.
+" @param    string    len     The length to pad the string to.
+" @param    string    side    The side to add the whitespace to: 'left' or 'right'.
+"
+" @return   string            The input string, padded.
+"""
+function! s:Pad(str, len, side)
+  if a:side ==# 'left'
+    return repeat(' ', a:len - len(a:str)) . a:str
+  elseif a:side ==# 'right'
+    return a:str . repeat(' ', a:len - len(a:str))
+  endif
+
+  return a:str
+endfunction
+
+"""
 " Goes to the previous diff in the split windows.
 """
 function! s:PreviousDiff()
@@ -279,6 +328,42 @@ function! s:PreviousDiff()
   silent! normal! [c
   call s:DiffAlign()
   call s:GotoQuickfixSplit()
+endfunction
+
+"""
+" Reformats the contents of the quicfix window
+" so that they are all pretty-like.
+"""
+function! s:ReformatQuickfix()
+  let l:quickfixList = getqflist()
+  let l:textParts = []
+  let l:longestName = 0
+
+  " Extract commit metadata.
+  for l:item in l:quickfixList
+    let l:textParts += [split(l:item.text, s:summaryFormatSeparator)]
+  endfor
+
+  " Find the length of the longest commit author name.
+  for l:parts in l:textParts
+    if strwidth(l:parts[1]) ># l:longestName
+      let l:longestName = strwidth(l:parts[1])
+    endif
+  endfor
+
+  " Rewrite quickfix line text with pretty-aligned columns.
+  let l:count = 0
+  for l:item in l:quickfixList
+    let l:dateWithoutTimeZone = strpart(l:textParts[l:count][0], 0, 19)
+    let l:paddedName          = s:Pad(l:textParts[l:count][1], l:longestName, 'right')
+    let l:commitMessage       = l:textParts[l:count][2]
+
+    let l:item.text = l:dateWithoutTimeZone . '    ' . l:paddedName . '    ' . l:commitMessage
+
+    let l:count += 1
+  endfor
+
+  call setqflist(l:quickfixList)
 endfunction
 
 """
