@@ -19,11 +19,11 @@ if exists('g:manhunt_diff_align') ==# 0   ||   g:manhunt_diff_align ==# ''
 endif
 
 if exists('g:manhunt_key_next_diff') ==# 0   ||   g:manhunt_key_next_diff ==# ''
-  let g:manhunt_key_next_diff = 'n'
+  let g:manhunt_key_next_diff = ']c'
 endif
 
 if exists('g:manhunt_key_previous_diff') ==# 0   ||   g:manhunt_key_previous_diff ==# ''
-  let g:manhunt_key_previous_diff = 'N'
+  let g:manhunt_key_previous_diff = '[c'
 endif
 
 if exists('g:manhunt_key_select_next_version') ==# 0   ||   g:manhunt_key_select_next_version ==# ''
