@@ -38,9 +38,20 @@ if exists('g:manhunt_key_select_version') ==# 0   ||   g:manhunt_key_select_vers
   let g:manhunt_key_select_version = '<CR>'
 endif
 
+let s:leftSignLineNum        = 0
+let s:manhuntBufferFileName  = '[Manhunt]'
+let s:manhuntBufferNumber    = 0
+let s:manhuntLSignName       = 'ManhuntL'
+let s:manhuntLRSignName      = 'ManhuntLR'
+let s:manhuntRSignName       = 'ManhuntR'
 let s:mode                   = ''
+let s:rightSignLineNum       = 0
 let s:startFilePath          = ''
 let s:summaryFormatSeparator = ';-----;'
+
+execute 'sign define ' . s:manhuntLSignName . ' text=L texthl=Search'
+execute 'sign define ' . s:manhuntRSignName . ' text=R texthl=Search'
+execute 'sign define ' . s:manhuntLRSignName . ' text=LR texthl=Search'
 
 """
 " Returns a newline-separated string of argument autocompletion suggestions.
@@ -68,7 +79,8 @@ endfunction
 " Aligns the diff split window according to the users's preference.
 """
 function! s:CreateManhuntBuffer()
-  noswapfile botright 10new [Manhunt]
+  execute 'noswapfile botright 10new ' . s:manhuntBufferFileName
+  let s:manhuntBufferNumber = bufnr('%')
   setlocal buftype=nofile
   setlocal bufhidden=delete
 
@@ -179,7 +191,7 @@ function! s:IsManhuntActive()
   " '$' returns the number of windows in the specified tab page
   let l:windowCount = tabpagewinnr(tabpagenr(), '$')
 
-  if l:windowCount ==# 3
+  if l:windowCount >=# 3
     return 1
   endif
 
@@ -409,15 +421,23 @@ function! s:SelectVersion()
   let l:selectedFilePath = matchstr(l:selectedLineText, l:pattern)
   let l:nextFilePath     = matchstr(l:nextLineText, l:pattern)
 
-  let l:leftFilePath  = ''
-  let l:rightFilePath = ''
+  let l:leftFilePath     = ''
+  let l:rightFilePath    = ''
+  let l:leftSignLineNum  = 0
+  let l:rightSignLineNum = 0
 
   if s:mode ==# 'working'
     let l:leftFilePath  = s:startFilePath
     let l:rightFilePath = l:selectedFilePath
+
+    let l:leftSignLineNum  = 1
+    let l:rightSignLineNum = l:selectedLineNum
   elseif s:mode ==# 'pair'
     let l:leftFilePath  = l:selectedFilePath
     let l:rightFilePath = l:nextFilePath
+
+    let l:leftSignLineNum  = l:selectedLineNum
+    let l:rightSignLineNum = l:nextLineNum
   endif
 
   " When selecting a version containing [Working Copy], use the working copy's file path.
@@ -428,6 +448,8 @@ function! s:SelectVersion()
   " When selecting the earliest version of a file, diff against itself.
   if l:rightFilePath ==# ''
     let l:rightFilePath = l:leftFilePath
+
+    let l:rightSignLineNum = l:leftSignLineNum
   endif
 
   call s:DiffToggle(0)
@@ -435,7 +457,26 @@ function! s:SelectVersion()
   call s:ShowFile(l:rightFilePath, 'right')
   call s:DiffToggle(1)
 
+  call s:SetSigns(l:leftSignLineNum, l:rightSignLineNum)
+endfunction
+
+"""
+" Sets the left and right signs in the Manhunt window.
+"
+" @param    integer    a:leftLineNum     The line number where the left sign should appear
+" @param    integer    a:rightLineNum    The line number where the right sign should appear
+"""
+function! s:SetSigns(leftLineNum, rightLineNum)
   call s:GotoManhuntSplit()
+
+  execute 'sign unplace * buffer=' . s:manhuntBufferNumber
+
+  if a:leftLineNum ==# a:rightLineNum
+    execute 'sign place 1 line=' . a:leftLineNum . ' name=' . s:manhuntLRSignName . ' buffer=' . s:manhuntBufferNumber
+  else
+    execute 'sign place 1 line=' . a:leftLineNum . ' name=' . s:manhuntLSignName . ' buffer=' . s:manhuntBufferNumber
+    execute 'sign place 2 line=' . a:rightLineNum . ' name=' . s:manhuntRSignName . ' buffer=' . s:manhuntBufferNumber
+  endif
 endfunction
 
 """
