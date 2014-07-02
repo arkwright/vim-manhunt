@@ -39,7 +39,7 @@ if exists('g:manhunt_key_select_version') ==# 0   ||   g:manhunt_key_select_vers
 endif
 
 let s:mode                   = ''
-let s:startBufferNumber      = 1
+let s:startFilePath          = ''
 let s:summaryFormatSeparator = ';-----;'
 
 """
@@ -62,6 +62,21 @@ function! manhunt#ArgumentAutocomplete(ArgLead, CmdLine, CursorPos)
   let l:joinedModes = join(l:modes, "\n")
 
   return l:joinedModes
+endfunction
+
+"""
+" Aligns the diff split window according to the users's preference.
+"""
+function! s:CreateManhuntBuffer()
+  noswapfile botright 10new [Manhunt]
+  setlocal buftype=nofile
+  setlocal bufhidden=delete
+
+  setlocal modifiable
+  execute '%d'
+  call append(0, s:TransformQuickfixData())
+  execute 'normal! ddgg0'
+  setlocal nomodifiable
 endfunction
 
 """
@@ -112,7 +127,7 @@ function! s:FirstDiff()
   call s:GotoLeftDiffSplit()
   silent! normal! gg
   call s:NextDiff()
-  call s:GotoQuickfixSplit()
+  call s:GotoManhuntSplit()
 endfunction
 
 """
@@ -141,9 +156,9 @@ function! s:GotoLeftDiffSplit()
 endfunction
 
 """
-" Moves the cursor to the right diff split.
+" Moves the cursor to the Manhunt split.
 """
-function! s:GotoQuickfixSplit()
+function! s:GotoManhuntSplit()
   execute '3wincmd w'
 endfunction
 
@@ -152,14 +167,6 @@ endfunction
 """
 function! s:GotoRightDiffSplit()
   execute '2wincmd w'
-endfunction
-
-"""
-" Scrolls the quickfix window horizontally so that undesirable parts
-" of the filename are off screen.
-"""
-function! s:HideQuickfixFilename()
-  execute "silent! normal! /||../e\<CR>zs"
 endfunction
 
 """
@@ -258,7 +265,7 @@ function! s:NextDiff()
   call s:GotoLeftDiffSplit()
   silent! normal! ]c
   call s:DiffAlign()
-  call s:GotoQuickfixSplit()
+  call s:GotoManhuntSplit()
 endfunction
 
 """
@@ -273,29 +280,36 @@ function! s:Off()
   call s:GotoLeftDiffSplit()
 
   only
-  execute 'buffer ' . s:startBufferNumber
+  execute 'buffer ' . s:startFilePath
 endfunction
 
 """
 " Turns Manhunt on.
 "
 " Sets up Manhunt splits and quickfix window.
+"""
 function! s:On()
-  " winbufnr(0) is the number of the buffer associated with the current window.
-  let s:startBufferNumber = winbufnr(0)
+  let s:startFilePath = expand('%:p')
 
   call s:Glog()
-  call s:ReformatQuickfix()
   vsplit
-  cwindow
-  execute "silent! normal! \<c-w>J"
-  call s:HideQuickfixFilename()
+  call s:CreateManhuntBuffer()
 
   execute 'nnoremap <buffer> ' . g:manhunt_key_next_diff . ' :call <SID>NextDiff()<CR>'
   execute 'nnoremap <buffer> ' . g:manhunt_key_previous_diff . ' :call <SID>PreviousDiff()<CR>'
   execute 'nnoremap <buffer> ' . g:manhunt_key_select_next_version . ' j:call <SID>SelectVersion()<CR>'
   execute 'nnoremap <buffer> ' . g:manhunt_key_select_previous_version . ' k:call <SID>SelectVersion()<CR>'
   execute 'nnoremap <buffer> ' . g:manhunt_key_select_version . ' :call <SID>SelectVersion()<CR>'
+
+  " Working mode places the cursor on the second line by default,
+  " because this will produce a useful diff between working copy
+  " and latest committed version. The cursor is not moved when
+  " switching from another mode *to* working mode, because when
+  " making such a switch it can be useful to continue to include
+  " the selected version in the new diff.
+  if s:mode ==# 'working'
+    execute 'normal! ggj'
+  endif
 
   call s:SelectVersion()
 endfunction
@@ -327,94 +341,101 @@ function! s:PreviousDiff()
   call s:GotoLeftDiffSplit()
   silent! normal! [c
   call s:DiffAlign()
-  call s:GotoQuickfixSplit()
+  call s:GotoManhuntSplit()
 endfunction
 
 """
-" Reformats the contents of the quicfix window
-" so that they are all pretty-like.
+" Transforms and returns data in the quickfix window,
+" such that the result is suitable for use in the Manhunt window.
+"
+" @return    list    One file per line.
 """
-function! s:ReformatQuickfix()
+function! s:TransformQuickfixData()
   let l:quickfixList = getqflist()
-  let l:textParts = []
-  let l:longestName = 0
+  let l:textParts    = []
 
   " Extract commit metadata.
   for l:item in l:quickfixList
     let l:textParts += [split(l:item.text, s:summaryFormatSeparator)]
   endfor
 
-  " Find the length of the longest commit author name.
+  let l:longestName    = 0
+  let l:longestMessage = 0
+
+  " Find the length of the longest commit author name,
+  " and longest commit message.
   for l:parts in l:textParts
     if strwidth(l:parts[1]) ># l:longestName
       let l:longestName = strwidth(l:parts[1])
     endif
+
+    if strwidth(l:parts[2]) ># l:longestMessage
+      let l:longestMessage = strwidth(l:parts[2])
+    endif
   endfor
 
-  " Rewrite quickfix line text with pretty-aligned columns.
-  let l:count = 0
+  let l:count          = 0
+  let l:newBufferLines = ['[Working Copy]']
+
+  " Build a list representing lines in the Manhunt buffer,
+  " with pretty-aligned columns.
   for l:item in l:quickfixList
     let l:dateWithoutTimeZone = strpart(l:textParts[l:count][0], 0, 19)
     let l:paddedName          = s:Pad(l:textParts[l:count][1], l:longestName, 'right')
-    let l:commitMessage       = l:textParts[l:count][2]
+    let l:paddedMessage       = s:Pad(l:textParts[l:count][2], l:longestMessage, 'right')
+    let l:fileName            = bufname(l:item.bufnr)
 
-    let l:item.text = l:dateWithoutTimeZone . '    ' . l:paddedName . '    ' . l:commitMessage
+    let l:newBufferLines += [l:dateWithoutTimeZone . '    ' . l:paddedName . '    ' . l:paddedMessage . '    ' . l:fileName]
 
     let l:count += 1
   endfor
 
-  call setqflist(l:quickfixList)
+  return l:newBufferLines
 endfunction
 
 """
 " Instructs Manhunt to display a diff appropriate for the version of the file under the cursor.
 """
 function! s:SelectVersion()
-  call s:GotoQuickfixSplit()
+  call s:GotoManhuntSplit()
 
-  " line('.') returns the line number for the cursor's current position.
-  let l:selectedLine = getline(line('.'))
-  let l:nextLine = getline(line('.') + 1)
+  let l:selectedLineNum = line('.')
+  let l:nextLineNum     = l:selectedLineNum + 1
 
-  " When selecting the bottom version, diff that version it against itself.
-  if l:nextLine ==# ''
-    let l:nextLine = l:selectedLine
-  endif
+  let l:selectedLineText = getline(l:selectedLineNum)
+  let l:nextLineText     = getline(l:nextLineNum)
 
-  let l:pattern = '^[^|]*'
+  let l:pattern          = 'fugitive:\/\/.*$'
+  let l:selectedFilePath = matchstr(l:selectedLineText, l:pattern)
+  let l:nextFilePath     = matchstr(l:nextLineText, l:pattern)
 
-  let l:selectedFile = matchstr(l:selectedLine, l:pattern)
-  let l:nextFile = matchstr(l:nextLine, l:pattern)
-
-  call s:DiffToggle(0)
+  let l:leftFilePath  = ''
+  let l:rightFilePath = ''
 
   if s:mode ==# 'working'
-    call s:ShowBuffer(s:startBufferNumber, 'left')
-    call s:ShowFile(l:selectedFile, 'right')
+    let l:leftFilePath  = s:startFilePath
+    let l:rightFilePath = l:selectedFilePath
   elseif s:mode ==# 'pair'
-    call s:ShowFile(l:selectedFile, 'left')
-    call s:ShowFile(l:nextFile, 'right')
+    let l:leftFilePath  = l:selectedFilePath
+    let l:rightFilePath = l:nextFilePath
   endif
 
+  " When selecting a version containing [Working Copy], use the working copy's file path.
+  if l:leftFilePath ==# ''
+    let l:leftFilePath = s:startFilePath
+  endif
+
+  " When selecting the earliest version of a file, diff against itself.
+  if l:rightFilePath ==# ''
+    let l:rightFilePath = l:leftFilePath
+  endif
+
+  call s:DiffToggle(0)
+  call s:ShowFile(l:leftFilePath, 'left')
+  call s:ShowFile(l:rightFilePath, 'right')
   call s:DiffToggle(1)
 
-  call s:GotoQuickfixSplit()
-endfunction
-
-"""
-" Shows the specified buffer in the specified split.
-"
-" @param    number    a:buffer   The buffer to display in the split.
-" @param    string    a:split    The split to display the buffer in. Can be 'left' or 'right'.
-"""
-function! s:ShowBuffer(buffer, split)
-  if a:split ==# 'left'
-    call s:GotoLeftDiffSplit()
-  else
-    call s:GotoRightDiffSplit()
-  endif
-
-  execute 'buffer ' . s:startBufferNumber
+  call s:GotoManhuntSplit()
 endfunction
 
 """
