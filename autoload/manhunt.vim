@@ -1,12 +1,14 @@
 """
 " User config via:
 "
-" let g:manhunt_default_mode = 'working|pair'
+" let g:manhunt_default_mode = 'working|pair|pin'
 " let g:manhunt_diff_align   = 'none|top|center|bottom'
 " let g:manhunt_key_next_diff = 'n'
 " let g:manhunt_key_previous_diff = 'N'
+" let g:manhunt_key_select_left_version = 'L'
 " let g:manhunt_key_select_next_version = 'j'
 " let g:manhunt_key_select_previous_version = 'k'
+" let g:manhunt_key_select_right_version = 'R'
 " let g:manhunt_key_select_version = '<CR>'
 """
 
@@ -26,6 +28,10 @@ if exists('g:manhunt_key_previous_diff') ==# 0   ||   g:manhunt_key_previous_dif
   let g:manhunt_key_previous_diff = '[c'
 endif
 
+if exists('g:manhunt_key_select_left_version') ==# 0   ||   g:manhunt_key_select_left_version ==# ''
+  let g:manhunt_key_select_left_version = 'L'
+endif
+
 if exists('g:manhunt_key_select_next_version') ==# 0   ||   g:manhunt_key_select_next_version ==# ''
   let g:manhunt_key_select_next_version = 'j'
 endif
@@ -34,20 +40,26 @@ if exists('g:manhunt_key_select_previous_version') ==# 0   ||   g:manhunt_key_se
   let g:manhunt_key_select_previous_version = 'k'
 endif
 
+if exists('g:manhunt_key_select_right_version') ==# 0   ||   g:manhunt_key_select_right_version ==# ''
+  let g:manhunt_key_select_right_version = 'R'
+endif
+
 if exists('g:manhunt_key_select_version') ==# 0   ||   g:manhunt_key_select_version ==# ''
   let g:manhunt_key_select_version = '<CR>'
 endif
 
-let s:leftSignLineNum        = 0
-let s:manhuntBufferFileName  = '[Manhunt]'
-let s:manhuntBufferNumber    = 0
-let s:manhuntLSignName       = 'ManhuntL'
-let s:manhuntLRSignName      = 'ManhuntLR'
-let s:manhuntRSignName       = 'ManhuntR'
-let s:mode                   = ''
-let s:rightSignLineNum       = 0
-let s:startFilePath          = ''
-let s:summaryFormatSeparator = ';-----;'
+let s:leftSignLineNum           = 0
+let s:manhuntBufferFileName     = '[Manhunt]'
+let s:manhuntBufferNumber       = 0
+let s:manhuntLSignName          = 'ManhuntL'
+let s:manhuntLRSignName         = 'ManhuntLR'
+let s:manhuntRSignName          = 'ManhuntR'
+let s:mode                      = ''
+let s:rightSignLineNum          = 0
+let s:selectedNewVersionLineNum = 1
+let s:selectedOldVersionLineNum = 1
+let s:startFilePath             = ''
+let s:summaryFormatSeparator    = ';-----;'
 
 execute 'sign define ' . s:manhuntLSignName . ' text=L texthl=Search'
 execute 'sign define ' . s:manhuntRSignName . ' text=R texthl=Search'
@@ -68,7 +80,7 @@ execute 'sign define ' . s:manhuntLRSignName . ' text=LR texthl=Search'
 " @return   string               A newline-separated string of autocompletion suggestions.
 """
 function! manhunt#ArgumentAutocomplete(ArgLead, CmdLine, CursorPos)
-  let l:modes = ['working', 'pair']
+  let l:modes = ['working', 'pair', 'pin']
 
   let l:joinedModes = join(l:modes, "\n")
 
@@ -224,9 +236,9 @@ endfunction
 """
 function! manhunt#Manhunt(...)
   if s:IsManhuntActive() ==# 1
-    if a:0 ==# 1   &&   (a:1 ==# 'working'   ||   a:1 ==# 'pair')
-      " Manhunt us already in this mode.
-      if a:0 ==# s:mode
+    if a:0 ==# 1   &&   (a:1 ==# 'working'   ||   a:1 ==# 'pair'   ||   a:1 ==# 'pin')
+      if a:1 ==# s:mode
+        " Manhunt is already in this mode.
         return
       endif
 
@@ -238,7 +250,7 @@ function! manhunt#Manhunt(...)
       else
         " Switch modes if Manhunt is active and a valid mode has been provided.
         let s:mode = a:1
-        call s:SelectVersion()
+        call s:SelectVersion('switch')
         return
       endif
     else
@@ -263,7 +275,7 @@ function! manhunt#Manhunt(...)
   endif
 
   " Default to 'working' mode if the user has not specified a valid mode.
-  if s:mode !=# 'working'   &&   s:mode !=# 'pair'
+  if s:mode !=# 'working'   &&   s:mode !=# 'pair'   &&   s:mode !=# 'pin'
     let s:mode = 'working'
   endif
 
@@ -309,9 +321,11 @@ function! s:On()
 
   execute 'nnoremap <buffer> ' . g:manhunt_key_next_diff . ' :call <SID>NextDiff()<CR>'
   execute 'nnoremap <buffer> ' . g:manhunt_key_previous_diff . ' :call <SID>PreviousDiff()<CR>'
-  execute 'nnoremap <buffer> ' . g:manhunt_key_select_next_version . ' j:call <SID>SelectVersion()<CR>'
-  execute 'nnoremap <buffer> ' . g:manhunt_key_select_previous_version . ' k:call <SID>SelectVersion()<CR>'
-  execute 'nnoremap <buffer> ' . g:manhunt_key_select_version . ' :call <SID>SelectVersion()<CR>'
+  execute 'nnoremap <buffer> ' . g:manhunt_key_select_next_version . ' j:call <SID>SelectVersion("next")<CR>'
+  execute 'nnoremap <buffer> ' . g:manhunt_key_select_previous_version . ' k:call <SID>SelectVersion("previous")<CR>'
+  execute 'nnoremap <buffer> ' . g:manhunt_key_select_version . ' :call <SID>SelectVersion("this")<CR>'
+  execute 'nnoremap <buffer> ' . g:manhunt_key_select_left_version . ' :call <SID>SelectVersion("left")<CR>'
+  execute 'nnoremap <buffer> ' . g:manhunt_key_select_right_version . ' :call <SID>SelectVersion("right")<CR>'
 
   " Working mode places the cursor on the second line by default,
   " because this will produce a useful diff between working copy
@@ -323,7 +337,7 @@ function! s:On()
     execute 'normal! ggj'
   endif
 
-  call s:SelectVersion()
+  call s:SelectVersion('init')
 endfunction
 
 """
@@ -407,57 +421,88 @@ endfunction
 
 """
 " Instructs Manhunt to display a diff appropriate for the version of the file under the cursor.
+"
+" @param    string    a:intent    The user's intention when selecting the version. Can be any of:
+"                                   'init'     = Initial version selection at Manhunt startup.
+"                                   'switch'   = Selection occurs automatically during switch between Manhunt modes.
+"                                   'this'     = Selection intented for no particular split.
+"                                   'left'     = Selection intented for left diff split.
+"                                   'right'    = Selection intented for right diff split.
+"                                   'next'     = Selection intented for next version.
+"                                   'previous' = Selection intented for previous version.
 """
-function! s:SelectVersion()
+function! s:SelectVersion(intent)
   call s:GotoManhuntSplit()
 
+  let l:totalLines      = len(getbufline(s:manhuntBufferNumber, 1, '$'))
   let l:selectedLineNum = line('.')
-  let l:nextLineNum     = l:selectedLineNum + 1
-
-  let l:selectedLineText = getline(l:selectedLineNum)
-  let l:nextLineText     = getline(l:nextLineNum)
-
-  let l:pattern          = 'fugitive:\/\/.*$'
-  let l:selectedFilePath = matchstr(l:selectedLineText, l:pattern)
-  let l:nextFilePath     = matchstr(l:nextLineText, l:pattern)
-
-  let l:leftFilePath     = ''
-  let l:rightFilePath    = ''
-  let l:leftSignLineNum  = 0
-  let l:rightSignLineNum = 0
 
   if s:mode ==# 'working'
-    let l:leftFilePath  = s:startFilePath
-    let l:rightFilePath = l:selectedFilePath
+    let s:selectedNewVersionLineNum = 1
+    let s:selectedOldVersionLineNum = l:selectedLineNum
 
-    let l:leftSignLineNum  = 1
-    let l:rightSignLineNum = l:selectedLineNum
+    if a:intent ==# 'init'
+      let s:selectedOldVersionLineNum = 2
+    endif
   elseif s:mode ==# 'pair'
-    let l:leftFilePath  = l:selectedFilePath
-    let l:rightFilePath = l:nextFilePath
+    let s:selectedNewVersionLineNum = l:selectedLineNum
+    let s:selectedOldVersionLineNum = l:selectedLineNum + 1
+  elseif s:mode ==# 'pin'
+    if a:intent ==# 'next'   ||   a:intent ==# 'previous'
+      " In pin mode, ignore automatic up/down selections of next/previous version.
+      return
+    elseif a:intent ==# 'this'
+      echoe 'Press L or R to select versions while in Manhunt pair mode.'
+      return
+    elseif a:intent ==# 'init'
+      let s:selectedOldVersionLineNum = 2
+    elseif a:intent ==# 'left'
+      if l:selectedLineNum ># s:selectedOldVersionLineNum
+        echoe 'Left selection cannot be older than right selection.'
+        return
+      endif
 
-    let l:leftSignLineNum  = l:selectedLineNum
-    let l:rightSignLineNum = l:nextLineNum
+      let s:selectedNewVersionLineNum = l:selectedLineNum
+    elseif a:intent ==# 'right'
+      if l:selectedLineNum <# s:selectedNewVersionLineNum
+        echoe 'Right selection cannot be older than left selection.'
+        return
+      endif
+
+      let s:selectedOldVersionLineNum = l:selectedLineNum
+    endif
   endif
 
-  " When selecting a version containing [Working Copy], use the working copy's file path.
-  if l:leftFilePath ==# ''
-    let l:leftFilePath = s:startFilePath
+  if s:selectedNewVersionLineNum ># l:totalLines
+    let s:selectedNewVersionLineNum = l:totalLines
   endif
 
-  " When selecting the earliest version of a file, diff against itself.
-  if l:rightFilePath ==# ''
-    let l:rightFilePath = l:leftFilePath
+  if s:selectedOldVersionLineNum ># l:totalLines
+    let s:selectedOldVersionLineNum = l:totalLines
+  endif
 
-    let l:rightSignLineNum = l:leftSignLineNum
+  let l:newVersionLineText = getline(s:selectedNewVersionLineNum)
+  let l:oldVersionLineText = getline(s:selectedOldVersionLineNum)
+
+  let l:pattern            = 'fugitive:\/\/.*$'
+  let l:newVersionFilePath = matchstr(l:newVersionLineText, l:pattern)
+  let l:oldVersionFilePath = matchstr(l:oldVersionLineText, l:pattern)
+
+  " If a file path cannot be found, the user must be selecting the [Working Copy].
+  if l:newVersionFilePath ==# ''
+    let l:newVersionFilePath = s:startFilePath
+  endif
+
+  if l:oldVersionFilePath ==# ''
+    let l:oldVersionFilePath = s:startFilePath
   endif
 
   call s:DiffToggle(0)
-  call s:ShowFile(l:leftFilePath, 'left')
-  call s:ShowFile(l:rightFilePath, 'right')
+  call s:ShowFile(l:newVersionFilePath, 'left')
+  call s:ShowFile(l:oldVersionFilePath, 'right')
   call s:DiffToggle(1)
 
-  call s:SetSigns(l:leftSignLineNum, l:rightSignLineNum)
+  call s:SetSigns(s:selectedNewVersionLineNum, s:selectedOldVersionLineNum)
 endfunction
 
 """
