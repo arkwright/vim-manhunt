@@ -1,4 +1,4 @@
-*manhunt.txt*           For Vim version 7.4           Last change: 2014 July 1
+*manhunt.txt*           For Vim version 7.4           Last change: 2014 July 4
 
 Author:  Robert Arkwright <https://github.com/arkwright>
 License: Unlicense (see |manhunt-license|)
@@ -20,6 +20,7 @@ CONTENTS                                                    *manhunt-contents*
      4. Modes ............................ |manhunt-modes|
           4.1 Working mode ............... |manhunt-working-mode|
           4.2 Pair mode .................. |manhunt-pair-mode|
+          4.3 Pin mode ................... |manhunt-pin-mode|
      5. Mappings ......................... |manhunt-mappings|
      6. Configuration .................... |manhunt-configuration|
      7. Bugs ............................. |manhunt-bugs|
@@ -34,27 +35,35 @@ CONTENTS                                                    *manhunt-contents*
 Sometimes it can be useful to rapidly explore the differences between versions
 of a file in your Git repository. I refer to this as "scrubbing" the diff,
 just as one would "scrub" video or audio playback. Unfortunately such
-interactivity is awkward in vim.
+interactivity is awkward in Vim.
 
-Manhunt makes it easy to rapidly diff a file against versions of itself, or
-the differences between two sequential versions of a file.
+Manhunt makes it easy to rapidly diff a file against versions of itself.
 
 ==============================================================================
 2. USAGE                                                       *manhunt-usage*
 
 Starting from a buffer which displays a file under version control, launch
 Manhunt using one of the |manhunt-commands|. Three split windows will be
-created, with two diffed versions of the file at the top, and the quickfix
-window at the bottom. From within the quickfix window, use the
-|manhunt-mappings| to browse the diff view in comfort and style! You can
-explore the file's history in different ways using the various
-|manhunt-modes|.
+created: two diffed versions of the file at the top, and a list of all
+versions of the file at the bottom (the Version List).
 
-The quickfix window contents are based on the output of |:Glog|, but modified
-to display additional information, such as the commit date, time, and author.
-To fit all of this information on the screen, the quickfix window is scrolled.
-To view hidden quickfix information, including the filename and commit hash,
-press |0|, |<Home>|, |^|, or similar.
+                  +---------------+--------------+
+                  |               |              |
+                  |    Recent     |   Old        |
+                  |    Version    |   Version    |
+                  |    (Diff)     |   (Diff)     |
+                  |               |              |
+                  +---------------+--------------+
+                  |         Version List         |
+                  +---------------+--------------+
+
+From within the Version List window, use the |manhunt-mappings| to browse the
+diff view in comfort and style! You can explore the file's history in
+different ways using the various |manhunt-modes|.
+
+The Version List window contents are based on the output of |:Glog|, but
+modified to display additional information, such as the commit date, time, and
+author.
 
 ==============================================================================
 3. COMMANDS                                                 *manhunt-commands*
@@ -63,22 +72,24 @@ press |0|, |<Home>|, |^|, or similar.
 
 :Manhunt [mode]      Start Manhunt in the specified |manhunt-mode|. If Manhunt
                      is already running, switch to the given mode. Valid modes
-                     are 'working' and 'pair':
+                     are 'working', 'pair', and 'pin':
 
                      :Manhunt working
                      :Manhunt pair
+                     :Manhunt pin
 
                      The mode names support autocompletion, so you can get
                      away with typing:
 
                      :Manhunt w<TAB>
-                     :Manhunt p<TAB>
+                     :Manhunt pa<TAB>
+                     :Manhunt pi<TAB>
 
 ==============================================================================
 4. MODES                                                       *manhunt-modes*
 
-Manhunt can operate in two different modes: 'working' and 'pair'. You can
-switch between the two modes at any time using the |:Manhunt| command.
+Manhunt can operate in three different modes: 'working', 'pair', and 'pin'.
+You can switch between these modes at any time using the |:Manhunt| command.
 
 'working' mode is Manhunt's default mode. You can change the default mode by
 setting the |g:manhunt_default_mode| option.
@@ -87,13 +98,13 @@ setting the |g:manhunt_default_mode| option.
 4.1 Working Mode                                        *manhunt-working-mode*
 
 'working' mode places the working copy of the file in the left diff split, and
-the selected version of your file in the right diff split. The quickfix window
+the selected version of your file in the right diff split. The Version List
 appears in a bottom split, and contains all versions of the file, with the
 most recent version at the top.
 
 This mode makes it easy to diff what you are working on against any arbitrary
 version of the same file. This mode also makes it possible to pull changes
-into the working version of the file.
+into the working version of the file using |:diffget|.
 
 ------------------------------------------------------------------------------
 4.2 Pair Mode                                              *manhunt-pair-mode*
@@ -101,19 +112,36 @@ into the working version of the file.
 'pair' mode places the selected version of the file in the left diff split,
 and the previous version of the same file in the right diff split. If there is
 no previous version of the file, the same version appears in both splits. The
-quickfix window appears in a bottom split, and contains all versions of the
-file, with the most recent version at the top.
+Version List window appears in a bottom split, and contains all versions of
+the file, with the most recent version at the top.
 
 This mode makes it easy to step through the differences between two sequential
 versions of the same file. You can also easily scrub through all individual
 changes to the file over time, which is great when diffing two distant
 versions of the same file produces a lot of noise.
 
+Protip: hammer on j and ]c mappings from within the Version List window to
+step backwards through each change made to the file over time.
+
+------------------------------------------------------------------------------
+4.3 Pin Mode                                                *manhunt-pin-mode*
+
+'pin' mode allows you to select arbitrary versions of the file for display in
+the left or right diff split. The Version List window appears in a bottom
+split, and contains all versions of the file, with the most recent version at
+the top. Within the Version List window, use the L and R mappings to select a
+version intended the left or right diff split, respectively. (Manhunt will
+display an error if you attempt to place the older of the two selected
+versions in the left split, or vice versa.)
+
+This mode makes it easy to show the changes to a file within a historical
+date range, and effortlessly adjust the desired range.
+
 ==============================================================================
 5. MAPPINGS                                                 *manhunt-mappings*
 
-Manhunt provides mappings within the quickfix window which make it very easy
-to browse the diff splits.
+Manhunt provides mappings within the Version List window which make it very
+easy to browse the diff splits.
 
                                                                    *manhunt-j*
                                                  *manhunt-select-next-version*
@@ -129,22 +157,22 @@ k                   Moves the cursor up one line, and selects that version
                     of the file for diffing. Can be customized using
                     |g:manhunt_key_select_previous_version|.
 
-                                                                   *manhunt-n*
+                                                                  *manhunt-]c*
                                                            *manhunt-next-diff*
 
-n                   Jump forwards to the next difference between the two
+]c                  Jump forwards to the next difference between the two
                     versions of the file being diffed. Like |]c|. Can be
                     customized using |g:manhunt_key_next_diff|. Auto-aligns
                     the difference. Auto-alignment can be customized or
                     disabled using |g:manhunt_diff_align|.
 
-                                                                   *manhunt-N*
+                                                                  *manhunt-[c*
                                                        *manhunt-previous-diff*
 
-N                   Jump backwards to the previous difference between the two
+[c                  Jump backwards to the previous difference between the two
                     versions of the file being diffed. Like |[c|. Can be
-                    customized using |g:manhunt_key_previous_diff|. Auto-aligns
-                    the difference. Auto-alignment can be customized or
+                    customized using |g:manhunt_key_previous_diff|. Auto-
+                    aligns the difference. Auto-alignment can be customized or
                     disabled using |g:manhunt_diff_align|.
 
                                                                 *manhunt-<CR>*
@@ -153,6 +181,20 @@ N                   Jump backwards to the previous difference between the two
 <CR>                Select the version of the file under the cursor for
                     diffing. Can be customized using
                     |g:manhunt_key_select_version|.
+
+                                                                   *manhunt-L*
+                                                 *manhunt-select-left-version*
+
+L                   In |manhunt-pin-mode|, select the version of the file
+                    under the cursor for diffing in the left split. Can be
+                    customized using |g:manhunt_key_select_left_version|.
+
+                                                                   *manhunt-R*
+                                                *manhunt-select-right-version*
+
+R                   In |manhunt-pin-mode|, select the version of the file
+                    under the cursor for diffing in the right split. Can be
+                    customized using |g:manhunt_key_select_right_version|.
 
 ==============================================================================
 6. CONFIGURATION                                       *manhunt-configuration*
@@ -167,13 +209,13 @@ Vim's rules for user command naming (see: |user-cmd-ambiguous|).
 
 Default is 'Manhunt'. >
 
-    :let g:manhunt_command_name = 'Difftastic'
+    :let g:manhunt_command_name = 'Manhunt'
 <
 ------------------------------------------------------------------------------
 *g:manhunt_default_mode*
 
 Changes the default mode used when calling |:Manhunt| without specifying a
-mode. Must be one of the following strings: 'working', 'pair'. See
+mode. Must be one of the following strings: 'working', 'pair', 'pin'. See
 |manhunt-modes| for more information about the modes.
 
 Default is 'Manhunt'. >
@@ -201,9 +243,9 @@ Default is 'center'. >
 Specifies the key binding for |manhunt-next-diff| to jump to the next diff.
 Must be a string representing a Vim key mapping.
 
-Default is 'n'. >
+Default is ']c'. >
 
-    :let g:manhunt_key_next_diff = 'n'
+    :let g:manhunt_key_next_diff = ']c'
 <
 ------------------------------------------------------------------------------
 *g:manhunt_key_previous_diff*
@@ -211,9 +253,20 @@ Default is 'n'. >
 Specifies the key binding for |manhunt-previous-diff| to jump to the previous
 diff. Must be a string representing a Vim key mapping.
 
-Default is 'N'. >
+Default is '[c'. >
 
-    :let g:manhunt_key_previous_diff = 'N'
+    :let g:manhunt_key_previous_diff = '[c'
+<
+------------------------------------------------------------------------------
+*g:manhunt_key_select_left_version*
+
+Specifies the key binding for |manhunt-select-left-version| to select the
+current version of the file for diffing in the left split while in
+|manhunt-pin-mode|. Must be a string representing a Vim key mapping.
+
+Default is 'L'. >
+
+    :let g:manhunt_key_select_left_version = 'L'
 <
 ------------------------------------------------------------------------------
 *g:manhunt_key_select_next_version*
@@ -236,6 +289,17 @@ Vim key mapping.
 Default is 'k'. >
 
     :let g:manhunt_key_select_previous_version = 'k'
+<
+------------------------------------------------------------------------------
+*g:manhunt_key_select_right_version*
+
+Specifies the key binding for |manhunt-select-right-version| to select the
+current version of the file for diffing in the right split while in
+|manhunt-pin-mode|. Must be a string representing a Vim key mapping.
+
+Default is 'R'. >
+
+    :let g:manhunt_key_select_right_version = 'R'
 <
 ------------------------------------------------------------------------------
 *g:manhunt_key_select_version*
@@ -271,6 +335,12 @@ http://github.com/arkwright/vim-manhunt
 Uses Semantic Versioning:
 
 http://semver.org/
+
+0.3.0 (2014-07-04)
+    - Add a new mode: |manhunt-pin-mode|.
+    - Use a custom buffer, the Version List, instead of the quickfix window.
+    - Change |g:manhunt_key_next_diff| and |g:manhunt_key_previous_diff|
+      default bindings to be ]c, and [c, respectively.
 
 0.2.0 (2014-07-01)
     - Add commit date, time, and author to quickfix window.
