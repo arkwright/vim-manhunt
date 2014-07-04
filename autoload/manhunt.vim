@@ -452,7 +452,7 @@ function! s:SelectVersion(intent)
       " In pin mode, ignore automatic up/down selections of next/previous version.
       return
     elseif a:intent ==# 'this'
-      echoe 'Press L or R to select versions while in Manhunt pair mode.'
+      echoe 'Press L or R to select versions while in Manhunt pin mode.'
       return
     elseif a:intent ==# 'init'
       let s:selectedOldVersionLineNum = 2
