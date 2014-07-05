@@ -1,4 +1,4 @@
-*manhunt.txt*           For Vim version 7.4           Last change: 2014 July 4
+*manhunt.txt*           For Vim version 7.4           Last change: 2014 July 5
 
 Author:  Robert Arkwright <https://github.com/arkwright>
 License: Unlicense (see |manhunt-license|)
@@ -64,6 +64,8 @@ different ways using the various |manhunt-modes|.
 The Version List window contents are based on the output of |:Glog|, but
 modified to display additional information, such as the commit date, time, and
 author.
+
+Use the |:Manhunt| command to turn Manhunt off when you are finished.
 
 ==============================================================================
 3. COMMANDS                                                 *manhunt-commands*
@@ -336,9 +338,10 @@ Uses Semantic Versioning:
 
 http://semver.org/
 
-0.3.0 (2014-07-04)
+0.3.0 (2014-07-05)
     - Add a new mode: |manhunt-pin-mode|.
     - Use a custom buffer, the Version List, instead of the quickfix window.
+    - Add signs to Version List to indicate the versions being diffed.
     - Change |g:manhunt_key_next_diff| and |g:manhunt_key_previous_diff|
       default bindings to be ]c, and [c, respectively.
 
