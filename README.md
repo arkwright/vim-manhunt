@@ -34,15 +34,15 @@ Open any file in your Git repo, and execute:
 Three split windows will be created: two diffed versions of the file at the
 top, and a list of all versions of the file at the bottom (the Version List).
 
-    +---------------+--------------+
+    +------------------------------+
     |               |              |
     |    Recent     |   Old        |
     |    Version    |   Version    |
     |    (Diff)     |   (Diff)     |
     |               |              |
-    +---------------+--------------+
+    +------------------------------+
     |         Version List         |
-    +---------------+--------------+
+    +------------------------------+
 
 From within the Version List window, use the `j` and `k` to browse the diff
 view in comfort and style! Use `]c` and `[c` from within the Version List
