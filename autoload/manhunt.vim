@@ -484,7 +484,7 @@ function! s:SelectVersion(intent)
   let l:newVersionLineText = getline(s:selectedNewVersionLineNum)
   let l:oldVersionLineText = getline(s:selectedOldVersionLineNum)
 
-  let l:pattern            = 'fugitive:\/\/.*$'
+  let l:pattern            = '\vfugitive:[\/\\]{2}.*$'
   let l:newVersionFilePath = matchstr(l:newVersionLineText, l:pattern)
   let l:oldVersionFilePath = matchstr(l:oldVersionLineText, l:pattern)
 
