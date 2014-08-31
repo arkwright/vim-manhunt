@@ -91,7 +91,7 @@ endfunction
 " Aligns the diff split window according to the users's preference.
 """
 function! s:CreateManhuntBuffer()
-  execute 'noswapfile botright 10new ' . s:manhuntBufferFileName
+  execute 'botright 10new ' . s:manhuntBufferFileName
   let s:manhuntBufferNumber = bufnr('%')
   setlocal buftype=nofile
   setlocal bufhidden=delete
