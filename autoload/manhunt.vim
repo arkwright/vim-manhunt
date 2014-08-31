@@ -139,7 +139,7 @@ function! s:DiffToggle(state)
     diffthis
     call s:GotoLeftDiffSplit()
     diffthis
-    
+
     " Jump to the first difference.
     call s:FirstDiff()
   endif
