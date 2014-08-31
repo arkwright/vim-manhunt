@@ -57,7 +57,7 @@ Use the `:Manhunt` command to turn Manhunt off when you are finished.
 ### Modes
 
 Manhunt can operate in three different modes: `working`, `pair`, and `pin`.
-You can switch between the two modes at any time, or start Manhunt in a
+You can switch between the three modes at any time, or start Manhunt in a
 specific mode, by passing a mode to the `:Manhunt` command, like so:
 
     :Manhunt working
