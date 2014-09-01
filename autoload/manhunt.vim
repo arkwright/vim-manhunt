@@ -95,6 +95,7 @@ function! s:CreateManhuntBuffer()
   let s:manhuntBufferNumber = bufnr('%')
   setlocal buftype=nofile
   setlocal bufhidden=delete
+  setlocal noswapfile
   setlocal nowrap
 
   setlocal modifiable
