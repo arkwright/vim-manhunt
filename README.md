@@ -23,7 +23,7 @@ And then:
     cd ~/.vim/bundle
     git clone https://github.com/arkwright/vim-manhunt.git
 
-### Windows Installation
+### Windows Troubleshooting
 
 There is a swap file problem in gVim for Windows 7 which triggers an `E303`
 error. The solution is to add `:set dir=$TEMP` to your `_vimrc` file, as per
