@@ -23,7 +23,18 @@ And then:
     cd ~/.vim/bundle
     git clone https://github.com/arkwright/vim-manhunt.git
 
-Only tested in Vim 7.4 on OS X using MacVim.
+### Windows Installation
+
+There is a swap file problem in gVim for Windows 7 which triggers an `E303`
+error. The solution is to add `:set dir=$TEMP` to your `_vimrc` file, as per
+these instructions:
+
+http://choorucode.com/2010/01/14/vim-unable-to-open-swap-file/
+
+There is also a diff problem with gVim 7.4 on Windows 7, which will trigger
+`E810` and `E97` errors. Here is a fix that seems to work:
+
+http://superuser.com/questions/697847/cant-run-vimdiff-7-4-on-windows-7
 
 ## Usage
 
@@ -135,6 +146,10 @@ Pull requests, feature requests, ideas, bug reports, etc., are all welcome.
 ## Changelog
 
 Uses [Semantic Versioning](http://semver.org/).
+
+**0.3.1** (2014-09-01)
+
+* Fix gVim/Windows errors.
 
 **0.3.0** (2014-07-05)
 

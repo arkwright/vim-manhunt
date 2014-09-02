@@ -1,4 +1,4 @@
-*manhunt.txt*           For Vim version 7.4           Last change: 2014 July 5
+*manhunt.txt*           For Vim version 7.4      Last change: 2014 September 1
 
 Author:  Robert Arkwright <https://github.com/arkwright>
 License: Unlicense (see |manhunt-license|)
@@ -8,7 +8,7 @@ License: Unlicense (see |manhunt-license|)
                                       o
                                      /|\
                                      / \
-                                               
+
           Enhance fugitive.vim with easy, interactive diff browsing.
 
 ==============================================================================
@@ -337,6 +337,9 @@ http://github.com/arkwright/vim-manhunt
 Uses Semantic Versioning:
 
 http://semver.org/
+
+0.3.1 (2014-09-01)
+    - Fix gVim/Windows errors.
 
 0.3.0 (2014-07-05)
     - Add a new mode: |manhunt-pin-mode|.
