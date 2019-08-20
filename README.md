@@ -14,14 +14,16 @@ Manhunt makes it easy to rapidly diff a file against versions of itself.
 
 ## Installation
 
-Get [Pathogen](https://github.com/tpope/vim-pathogen).
+**Only supports `vim-fugitive` up to version 2.5.** Versions 3.0 and later
+break this plugin.
 
-Get [fugitive.vim](https://github.com/tpope/vim-fugitive).
+Install via your Vim package manager of choice, and then pin `vim-fugitive` to
+Git revision `2564c37d0a2ade327d6381fef42d84d9fad1d057`. For Vundle:
 
-And then:
-
-    cd ~/.vim/bundle
-    git clone https://github.com/arkwright/vim-manhunt.git
+```
+Plugin 'arkwright/vim-manhunt'
+Plugin 'tpope/vim-fugitive', { 'pinned': 1 } " 2564c37d0a2ade327d6381fef42d84d9fad1d057
+```
 
 ### Windows Troubleshooting
 
